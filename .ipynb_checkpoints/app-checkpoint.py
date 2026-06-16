@@ -9,22 +9,20 @@ st.set_page_config(
     layout="wide"
 )
 
-MODEL_PATH = "../qwen_security_merged"
 
-@st.cache_resource
-def load_model():
+def main() :
+    st.title("Lets Secure JAVA code ! ",text_alignment="left",anchor=False)
+
+    MODEL_PATH = "../qwen_security_merged"
+     
     tokenizer = AutoTokenizer.from_pretrained(MODEL_PATH)
+     
     model = AutoModelForCausalLM.from_pretrained(
         MODEL_PATH,
         torch_dtype=torch.bfloat16,
         device_map="auto"
     )
-    return tokenizer, model
-
-
-def main() :
-    st.title("Lets Secure JAVA code ! ",text_alignment="left",anchor=False)
-
+    
     col1 , col2 = st.columns(spec=[1,1],gap="medium")
     codeText = ""
     with col1:
@@ -33,9 +31,7 @@ def main() :
     with col2:
         st.subheader("Secure Result : ",anchor=False)
         if st.button("Secure") and codeText : 
-            with st.spinner("Securing Java code..."):
-                tokenizer, model = load_model()
-                col_2_Method(codeText, tokenizer, model)
+            col_2_Method(codeText)
         
 
 
@@ -59,7 +55,7 @@ def col_1_Method():
 
     return codeText
 
-def col_2_Method(codeText, tokenizer, model):
+def col_2_Method(codeText):
     prompt = f"""
     ### Task
     Analyze the Java code and fix the vulnerability
@@ -86,13 +82,8 @@ def col_2_Method(codeText, tokenizer, model):
             outputs[0],
             skip_special_tokens=True
         )
-
-    parts = result.split("### Vulnerability")[-1].strip().split("### Secure Code")
-
-    st.subheader("Vulnerability Found")
-    st.write(parts[0])
+    codeText = result.split("### Vulnerability")[-1].strip()
     
-    codeText = parts[1]
     st.code(codeText,language="java")
 
 if __name__ == "__main__" :
